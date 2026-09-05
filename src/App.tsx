@@ -7,6 +7,10 @@ import { peopleFromServer as people } from './data/people';
 export const App = () => {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
+  const handleChange = () => {
+    setSelectedPerson(null);
+  };
+
   return (
     <div className="App">
       <h1 data-cy="title">
@@ -18,7 +22,7 @@ export const App = () => {
       <Autocomplete
         people={people}
         onSelected={setSelectedPerson}
-        onChange={() => setSelectedPerson(null)}
+        onChange={handleChange}
       />
     </div>
   );
