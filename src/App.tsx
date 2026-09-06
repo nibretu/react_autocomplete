@@ -1,13 +1,19 @@
-import './App.scss';
 import { useState } from 'react';
+
+import './App.scss';
+
+import peopleFromServer from './data/people';
 import { Autocomplete } from './Autocomplete';
 import { Person } from './types/Person';
-import { peopleFromServer as people } from './data/people';
 
 export const App = () => {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
-  const handleChange = () => {
+  const handleSelected = (person: Person) => {
+    setSelectedPerson(person);
+  };
+
+  const handleInputChange = () => {
     setSelectedPerson(null);
   };
 
@@ -20,9 +26,9 @@ export const App = () => {
       </h1>
 
       <Autocomplete
-        people={people}
-        onSelected={setSelectedPerson}
-        onChange={handleChange}
+        people={peopleFromServer}
+        onSelected={handleSelected}
+        onChange={handleInputChange}
       />
     </div>
   );

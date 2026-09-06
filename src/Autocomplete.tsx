@@ -1,123 +1,92 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import cn from 'classnames';
+
 import { Person } from './types/Person';
 
-type Props = {
+interface Props {
   people: Person[];
   delay?: number;
   onSelected: (person: Person) => void;
-  onChange: () => void;
-};
+  onChange?: () => void;
+}
 
-export const Autocomplete: React.FC<Props> = ({
+export const Autocomplete = ({
   people,
   delay = 300,
   onSelected,
   onChange,
-}) => {
+}: Props) => {
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<Person[]>([]);
+  const [suggestions, setSuggestions] = useState<Person[]>(people);
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!query) {
+      const normalizedQuery = query.trim().toLowerCase();
+
+      if (normalizedQuery === '') {
         setSuggestions(people);
       } else {
-        const normalizedQuery = query.toLowerCase();
-
         setSuggestions(
           people.filter(person =>
             person.name.toLowerCase().includes(normalizedQuery),
           ),
         );
       }
-
-      setIsOpen(true);
     }, delay);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [query, delay, people]);
+  }, [query, people, delay]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.value;
-
-    setQuery(newValue);
+    setQuery(event.target.value);
     setIsOpen(true);
-
-    // Clear selected person when input changes
-    if (selectedPerson) {
-      setSelectedPerson(null);
-      onChange();
-    }
+    onChange?.();
   };
 
   const handleFocus = () => {
-    if (!query) {
-      setSuggestions(people);
-    }
-
     setIsOpen(true);
   };
 
   const handleSelect = (person: Person) => {
     setQuery(person.name);
     setIsOpen(false);
-    setSelectedPerson(person);
     onSelected(person);
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
   return (
-    <div className={`dropdown ${isOpen ? 'is-active' : ''}`}>
+    <div
+      className={cn('dropdown', {
+        'is-active': isOpen,
+      })}
+    >
       <div className="dropdown-trigger">
-        <input
-          ref={inputRef}
-          className="input"
-          type="text"
-          value={query}
-          onChange={handleChange}
-          onFocus={handleFocus}
-          placeholder="Enter a part of the name"
-          data-cy="search-input"
-        />
+        <div className="control">
+          <input
+            data-cy="search-input"
+            className="input"
+            type="text"
+            placeholder="Enter a part of the name"
+            value={query}
+            onChange={handleChange}
+            onFocus={handleFocus}
+          />
+        </div>
       </div>
 
       {isOpen && (
-        <div
-          className="dropdown-menu"
-          data-cy="suggestions-list"
-          role="listbox"
-        >
+        <div className="dropdown-menu" data-cy="suggestions-list">
           <div className="dropdown-content">
             {suggestions.length > 0 ? (
               suggestions.map(person => (
                 <button
+                  key={`${person.name}-${person.born}`}
                   type="button"
                   className="dropdown-item"
-                  key={person.slug || person.name}
-                  onClick={() => handleSelect(person)}
                   data-cy="suggestion-item"
+                  onClick={() => handleSelect(person)}
                 >
                   {person.name}
                 </button>
